@@ -1,0 +1,34 @@
+   {
+        "_id" : ObjectId("5d011c94ee66e13d34c7c388"),
+        "userName" : "kevin",
+        "email" : "kevin@google.com",
+        "password" : "affdsg342",
+        "houses" : [
+            {
+                "name" : "Big Villa",
+                "neighborhood" : "Zew Ine"
+            },
+            {
+                "name" : "Small Villa",
+                "neighborhood" : "Raju"
+            }
+        ]
+    },
+    list of all neighbouhood of Raju
+
+    db.collectionName.aggregate([
+        {
+            $unwind:"$houses"
+        },
+        {
+            $match:{
+                userName:"raju"
+            }
+        },
+        {
+            $project:{
+                houseName:"$houses.name",
+                neighborhood:"$houses.neighborhood"
+            }
+        }
+    ])
