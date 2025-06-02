@@ -1,0 +1,124 @@
+{
+  "_id": 1,
+  "customer": "John",
+  "items": [
+    { "product": "pen", "qty": 10, "price": 5 },
+    { "product": "notebook", "qty": 2, "price": 20 }
+  ],
+  "totalAmount": 90,
+  "status": "delivered",
+  "orderDate": ISODate("2024-11-01T10:00:00Z")
+}
+
+
+Find all orders where the customer bought more than 5 pens.
+
+db.collectionName.aggregate([
+    {
+        $unwind:"$items"
+    },
+    {
+        $group:{
+            _id:"$_id",
+            totalSum:{$sum:1}
+        }
+    },
+    {
+        $match:{
+            totalSum:{$gt:5}
+        }
+    }
+])
+
+
+
+db.users.insertOne({
+  _id: ObjectId("665a7eecf1f1a1a1a1a1a101"),
+  name: "John Doe",
+  email: "john@example.com",
+  age: 30,
+  status: "active",
+  address: {
+    city: "New York",
+    zip: "10001"
+  }
+});
+
+
+db.orders.insertOne({
+  _id: ObjectId("665a7f3ef1f1a1a1a1a1b201"),
+  user_id: ObjectId("665a7eecf1f1a1a1a1a1a101"),
+  amount: 300,
+  items: [
+    { product: "Laptop", qty: 1, price: 250 },
+    { product: "Mouse", qty: 2, price: 25 }
+  ],
+  status: "delivered",
+  createdAt: ISODate("2024-06-12T10:00:00Z")
+});
+
+
+Show this as a single document with:
+
+order_id
+
+user_id
+
+total_price (calculated as sum of qty * price for all items)
+
+db.orders.aggregate([
+    {
+        $unwind:"$items"
+    },
+    {
+    $project: {
+        user_id: 1,
+        item_total: { $multiply: ["$items.qty", "$items.price"] }
+    }
+    }, { 
+    $group: {
+      _id: "$user_id",
+      total_price: { $sum: "$item_total" }
+    }
+  }
+
+])
+
+Write an aggregation query to find the average total_amount of completed orders for users who are older than 25 and live in "New York".
+
+
+db.orders.aggregate([
+    {
+        $lookup:{
+            from:"users",
+            localField:"user_id",
+            foreignField:"_id",
+            as:"userDetails"
+        }
+    },
+    {
+        $match:{
+            "userDetails.age":{$gt:25},
+            "userDetails.address.city":"New York"
+        }
+    },
+    {
+        $unwind:"$items"
+    },
+    {
+        $group:{
+            _id:"$userDetails._id",
+            name: { $first: "$userDetails.name" },
+            totalAvg:{$avg:"$items.price"},
+            user_id:{$first:"$userDetails._id"}
+        }
+    },
+    {
+        $project:{
+            _id:0,
+            totalAvg:1,
+            user_id:1,
+            name:1
+        }
+    }
+])
