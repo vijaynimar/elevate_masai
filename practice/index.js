@@ -9,8 +9,8 @@ fs.readFile("db.txt","utf-8",(err,data)=>{
 })
 console.log("10");
 fs.appendFileSync("db.txt",`vijay`)
-fs.unlink("db.txt",(err)=>{
-    if(err){
-        throw err
-    }
-})
+// fs.unlink("db.txt",(err)=>{
+//     if(err){
+//         throw err
+//     }
+// })
