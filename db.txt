@@ -122,3 +122,205 @@ db.orders.aggregate([
         }
     }
 ])
+
+
+
+marks collection
+[
+  {
+    "_id": 1001,
+    "studentId": 1,
+    "exam": "Midterm",
+    "marks": [
+      { "subject": "Mathematics", "score": 85 },
+      { "subject": "Science", "score": 78 },
+      { "subject": "English", "score": 90 }
+    ]
+  }
+]
+
+
+teachers collection
+
+[
+  {
+    "_id": 101,
+    "name": "Mr. Verma",
+    "subject": "Mathematics",
+    "classAssigned": ["7th", "8th"]
+  }
+]
+
+
+student collection
+
+[
+  {
+    "_id": 1,
+    "name": "Rahul Kumar",
+    "age": 14,
+    "class": "8th",
+    "address": {
+      "city": "Delhi",
+      "zipcode": "110001"
+    }
+  }
+]
+
+
+Find all students who live in Delhi.
+db.students.aggregate([
+    {
+        $match:{
+            "address.city":"Delhi"
+        }
+    }
+])
+
+
+
+List the names and classes of all students.
+
+db.students.aggregate([
+    {
+        $project:{
+            name:1,
+            class:1
+        }
+    }
+])
+
+
+Find all teachers who teach Mathematics.
+db.teachers.aggregate([
+    {
+        $match:{
+            subject: "Mathematics"
+        }
+    }
+])
+
+
+Get all marks records for student with _id: 1.
+
+db.marks.aggregate([
+    {
+        $match:{
+            studentId:1
+        }
+    }
+])
+
+
+
+List all students with their marks (use $lookup).
+db.marks.aggregate([
+    {
+        $lookup:{
+            from:"students",
+            localField:"studentId",
+            foreignField:"_id",
+            as:"studentDetails"
+        }
+    },
+    {
+        $unwind:"$studentDetails"
+    },
+    {
+        $project:{
+            studentName:"$studentDetails.name",
+            marks:1,
+            _id:0
+        }
+    }
+])
+
+
+Count how many students are in each class.
+db.students.aggregate([
+    {
+        $group:{
+            _id:"$class",
+            totalStudents:{$sum:1}
+        }
+    }
+])
+
+
+Find the total number of teachers.
+db.teachers.countDocuments()
+
+Get student names and their city.
+db.students.find({},{name:1,city:"$address.city"})
+
+Find all teachers assigned to class "8th".
+db.teachers.aggregate([
+    {
+       $match:{
+         classAssigned:{$in:["8th"]}
+       }
+    }
+])
+
+
+List names of students who scored more than 80 in English (use $unwind).
+
+db.marks.aggregate([
+    {
+        $unwind:"$marks"
+    },
+    {
+        $match:{
+            "marks.subject":"English",
+            "marks.score":{$gt:80}
+        }
+    },
+    {
+        $lookup:{
+            from:"students",
+            localField:"studentId",
+            foreignField:"_id",
+            as:"studentDetails"
+        }
+    },{
+        $unwind:"$studentDetails"
+    },
+    {
+        $project:{
+            studentName:"$studentDetails.name"
+        }
+    }
+])
+
+
+
+🟡 Medium Level (10 Questions)
+
+Show each student with their average score.
+
+db.marks.aggregate([
+    {
+        $unwind:"$marks"
+    },
+    {
+        $group:{
+            _id:"$studentId",
+            averageMarks:{$avg:"$marks.score"}
+        }
+    },
+    {
+       $lookup:{
+        from:"students",
+        localField:"studentId",
+        foreignField:"_id",
+        as:"student"
+       }
+    },
+    {
+        $project:{
+            _id:0,
+            studentName:"$student.name",
+            averageMarks:1
+        }
+    }
+]) 
